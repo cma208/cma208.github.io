@@ -1,95 +1,156 @@
-/*
-	Future Imperfect by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
-*/
+/* ============================================================
+   Interactions + animations.
+   Progressive enhancement: works without GSAP, respects
+   prefers-reduced-motion.
+   ============================================================ */
+(function () {
+  "use strict";
 
-(function($) {
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const hasGSAP = typeof window.gsap !== "undefined";
 
-	var	$window = $(window),
-		$body = $('body'),
-		$menu = $('#menu'),
-		$sidebar = $('#sidebar'),
-		$main = $('#main');
+  /* ---------- Theme ---------- */
+  const THEME_KEY = "cm_theme";
+  function currentTheme() {
+    try {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved === "light" || saved === "dark") return saved;
+    } catch (e) { /* ignore */ }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  function setTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem(THEME_KEY, t); } catch (e) { /* ignore */ }
+  }
+  // initial theme is also set inline in <head>; keep in sync here.
+  setTheme(document.documentElement.getAttribute("data-theme") || currentTheme());
 
-	// Breakpoints.
-		breakpoints({
-			xlarge:   [ '1281px',  '1680px' ],
-			large:    [ '981px',   '1280px' ],
-			medium:   [ '737px',   '980px'  ],
-			small:    [ '481px',   '736px'  ],
-			xsmall:   [ null,      '480px'  ]
-		});
+  const themeBtn = document.querySelector("[data-theme-toggle]");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      setTheme(next);
+    });
+  }
 
-	// Play initial animations on page load.
-		$window.on('load', function() {
-			window.setTimeout(function() {
-				$body.removeClass('is-preload');
-			}, 100);
-		});
+  /* ---------- Mobile nav ---------- */
+  const navToggle = document.querySelector("[data-nav-toggle]");
+  const navLinks = document.querySelector("[data-nav-links]");
+  function closeNav() {
+    if (!navLinks) return;
+    navLinks.classList.remove("open");
+    if (navToggle) navToggle.setAttribute("aria-expanded", "false");
+  }
+  if (navToggle && navLinks) {
+    navToggle.addEventListener("click", () => {
+      const open = navLinks.classList.toggle("open");
+      navToggle.setAttribute("aria-expanded", String(open));
+    });
+    navLinks.querySelectorAll("a").forEach((a) => a.addEventListener("click", closeNav));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeNav(); });
+    document.addEventListener("click", (e) => {
+      if (navLinks.classList.contains("open") &&
+          !navLinks.contains(e.target) && !navToggle.contains(e.target)) closeNav();
+    });
+  }
 
-	// Menu.
-		$menu
-			.appendTo($body)
-			.panel({
-				delay: 500,
-				hideOnClick: true,
-				hideOnSwipe: true,
-				resetScroll: true,
-				resetForms: true,
-				side: 'right',
-				target: $body,
-				visibleClass: 'is-menu-visible'
-			});
+  /* ---------- Header scroll state ---------- */
+  const header = document.querySelector("[data-header]");
+  if (header) {
+    const onScroll = () => header.classList.toggle("is-scrolled", window.scrollY > 10);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+  }
 
-	// Search (header).
-		var $search = $('#search'),
-			$search_input = $search.find('input');
+  /* ---------- Counters ---------- */
+  function animateCount(el) {
+    const target = parseFloat(el.getAttribute("data-count"));
+    if (isNaN(target)) return;
+    const suffix = el.getAttribute("data-suffix") || "";
+    const decimals = (el.getAttribute("data-count").split(".")[1] || "").length;
+    if (reduceMotion || !hasGSAP) { el.textContent = target.toFixed(decimals) + suffix; return; }
+    const obj = { v: 0 };
+    window.gsap.to(obj, {
+      v: target, duration: 1.6, ease: "power2.out",
+      onUpdate: () => { el.textContent = obj.v.toFixed(decimals) + suffix; },
+    });
+  }
 
-		$body
-			.on('click', '[href="#search"]', function(event) {
+  /* ---------- Animations ---------- */
+  const reveals = Array.from(document.querySelectorAll(".reveal"));
+  const counters = Array.from(document.querySelectorAll("[data-count]"));
 
-				event.preventDefault();
+  function showAll() {
+    reveals.forEach((el) => { el.style.opacity = "1"; el.style.transform = "none"; });
+    counters.forEach(animateCount);
+  }
 
-				// Not visible?
-					if (!$search.hasClass('visible')) {
+  if (!hasGSAP || reduceMotion) {
+    showAll();
+  } else try {
+    const gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
 
-						// Reset form.
-							$search[0].reset();
+    // Hero intro (immediate, staggered)
+    const heroBits = gsap.utils.toArray("[data-hero] .reveal");
+    if (heroBits.length) {
+      gsap.set(heroBits, { opacity: 0, y: 24 });
+      gsap.to(heroBits, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", stagger: 0.09, delay: 0.1 });
+    }
 
-						// Show.
-							$search.addClass('visible');
+    // Scroll reveals (everything else)
+    reveals.filter((el) => !el.closest("[data-hero]")).forEach((el) => {
+      gsap.set(el, { opacity: 0, y: 30 });
+      window.ScrollTrigger.create({
+        trigger: el, start: "top 88%", once: true,
+        onEnter: () => gsap.to(el, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }),
+      });
+    });
 
-						// Focus input.
-							$search_input.focus();
+    // Counters on scroll
+    counters.forEach((el) => {
+      window.ScrollTrigger.create({
+        trigger: el, start: "top 90%", once: true, onEnter: () => animateCount(el),
+      });
+    });
 
-					}
+    // Parallax on hero grid
+    const grid = document.querySelector(".hero-grid");
+    if (grid) {
+      gsap.to(grid, {
+        yPercent: 18, ease: "none",
+        scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true },
+      });
+    }
 
-			});
+    // Safety: if any reveal never triggers, reveal on load fallback after a tick
+    window.addEventListener("load", () => window.ScrollTrigger.refresh());
+  } catch (err) {
+    // If anything in the animation setup fails, never leave content hidden.
+    showAll();
+  }
 
-		$search_input
-			.on('keydown', function(event) {
+  /* ---------- Active section in nav ---------- */
+  const navAnchors = Array.from(document.querySelectorAll('[data-nav-links] a[href^="#"]'));
+  const sections = navAnchors
+    .map((a) => document.querySelector(a.getAttribute("href")))
+    .filter(Boolean);
+  if (sections.length && "IntersectionObserver" in window) {
+    const byId = {};
+    navAnchors.forEach((a) => { byId[a.getAttribute("href").slice(1)] = a; });
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const a = byId[entry.target.id];
+        if (a && entry.isIntersecting) {
+          navAnchors.forEach((x) => x.removeAttribute("aria-current"));
+          a.setAttribute("aria-current", "true");
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px" });
+    sections.forEach((s) => obs.observe(s));
+  }
 
-				if (event.keyCode == 27)
-					$search_input.blur();
-
-			})
-			.on('blur', function() {
-				window.setTimeout(function() {
-					$search.removeClass('visible');
-				}, 100);
-			});
-
-	// Intro.
-		var $intro = $('#intro');
-
-		// Move to main on <=large, back to sidebar on >large.
-			breakpoints.on('<=large', function() {
-				$intro.prependTo($main);
-			});
-
-			breakpoints.on('>large', function() {
-				$intro.prependTo($sidebar);
-			});
-
-})(jQuery);
+  /* ---------- Year in footer ---------- */
+  const yearEl = document.querySelector("[data-year]");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+})();

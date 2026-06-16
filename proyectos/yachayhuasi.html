@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YachayHuasi — Case study · Carlos Machicado</title>
+  <meta name="description" content="YachayHuasi: plataforma de gestión académica de la URP (equipo OFICIC). Mi contribución: arquitectura de reportes Excel con Apache POI y módulos académicos. Case study por Carlos Machicado." />
+  <meta name="theme-color" content="#3a6b54" />
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <script>
+    (function () {
+      var d = document.documentElement; d.classList.add("js");
+      try {
+        var t = localStorage.getItem("cm_theme");
+        if (t !== "light" && t !== "dark") t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        d.setAttribute("data-theme", t);
+      } catch (e) { d.setAttribute("data-theme", "light"); }
+    })();
+  </script>
+</head>
+<body>
+  <svg class="icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="ic-back" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+    <symbol id="ic-external" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+    <symbol id="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+    <symbol id="ic-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></symbol>
+    <symbol id="ic-grad" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2 2 6 2s6-1 6-2v-5"/></symbol>
+    <symbol id="ic-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></symbol>
+    <symbol id="ic-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></symbol>
+    <symbol id="ic-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+    <symbol id="ic-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+    <symbol id="ic-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></symbol>
+    <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="ic-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.3L3 18l3 3 6.4-6.3a4 4 0 0 0 5.3-5.4l-2.6 2.6-2.3-2.3z"/></symbol>
+  </svg>
+
+  <header class="header" data-header>
+    <div class="container nav">
+      <a class="cs-back" href="../index.html">
+        <svg class="ico"><use href="#ic-back"/></svg>
+        <span data-i18n="cs.back">Volver al inicio</span>
+      </a>
+      <div class="nav-tools">
+        <div class="lang-toggle" role="group" aria-label="Idioma / Language">
+          <button type="button" data-lang-btn="es">ES</button>
+          <button type="button" data-lang-btn="en">EN</button>
+        </div>
+        <button type="button" class="icon-btn" data-theme-toggle aria-label="Theme">
+          <svg class="ico theme-icon-sun" width="19" height="19"><use href="#ic-sun"/></svg>
+          <svg class="ico theme-icon-moon" width="19" height="19"><use href="#ic-moon"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="cs-hero relief relief-arcs">
+      <div class="container">
+        <p class="eyebrow" style="margin-bottom:10px"><span data-lang="es">producción · universidad ricardo palma</span><span data-lang="en" hidden>production · universidad ricardo palma</span></p>
+        <h1 class="reveal">YachayHuasi</h1>
+        <p class="cs-sub reveal">
+          <span data-lang="es">La plataforma de gestión académica que reemplazó a “Apolo”, el sistema central de la URP tras más de 20 años — del quechua, “casa del saber”.</span>
+          <span data-lang="en" hidden>The academic-management platform that replaced “Apolo”, URP's core system after 20+ years — from Quechua, “house of knowledge”.</span>
+        </p>
+        <p class="cs-role reveal">
+          <span data-lang="es">Desarrollada por el equipo de la OFICIC (~6 desarrolladores) · Mi rol: desarrollador backend — arquitectura de reportes Excel y módulos académicos.</span>
+          <span data-lang="en" hidden>Built by the OFICIC team (~6 developers) · My role: backend developer — Excel reporting architecture and academic modules.</span>
+        </p>
+        <div class="cs-stats">
+          <div class="chip reveal"><div class="n">~11.6K</div><div class="l"><span data-lang="es">alumnos por ciclo</span><span data-lang="en" hidden>students per cycle</span></div></div>
+          <div class="chip reveal"><div class="n"><span data-count="30" data-suffix="+">30+</span></div><div class="l"><span data-lang="es">módulos en producción</span><span data-lang="en" hidden>modules in production</span></div></div>
+          <div class="chip reveal"><div class="n"><span data-count="13">13</span></div><div class="l"><span data-lang="es">módulos usan mi arquitectura de reportes</span><span data-lang="en" hidden>modules use my reporting architecture</span></div></div>
+          <div class="chip reveal"><div class="n">~660</div><div class="l"><span data-lang="es">endpoints REST · 31 controladores</span><span data-lang="en" hidden>REST endpoints · 31 controllers</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="cs-body">
+      <div class="container">
+
+        <section class="cs-section reveal relief relief-arcs">
+          <h2><span class="idx">01</span> <span data-lang="es">contexto</span><span data-lang="en" hidden>context</span></h2>
+          <p class="cs-lede" data-lang="es">YachayHuasi es el sistema de gestión académica de la Universidad Ricardo Palma, construido internamente por la OFICIC para reemplazar a “Apolo”, el sistema legacy que la universidad usó durante más de 20 años. Cubre más de 30 módulos —matrícula (extraordinaria, automática, residentado médico), carga lectiva y no lectiva, cuadro de necesidades, cierre y propuesta de carga, gestión de alumnos y de notas, dashboards, mantenimiento, trazabilidad y un motor transversal de reportes— y atiende a unos 11.600 alumnos por ciclo semestral. La migración fue progresiva: el backend aún lee vistas puente del antiguo Apolo durante la transición. Es un proyecto de equipo (~6 desarrolladores); lo que sigue describe mi contribución específica.</p>
+          <p class="cs-lede" data-lang="en" hidden>YachayHuasi is Universidad Ricardo Palma's academic-management system, built in-house by the OFICIC to replace “Apolo”, the legacy system the university used for over 20 years. It spans 30+ modules —enrollment (extraordinary, automatic, medical residency), teaching and non-teaching load, requirements planning, course closing and proposal, student and grade management, dashboards, maintenance, audit trail and a cross-cutting reporting engine— and serves around 11,600 students per semester cycle. The migration was gradual: the backend still reads bridge views from the old Apolo during the transition. It's a team project (~6 developers); what follows describes my specific contribution.</p>
+        </section>
+
+        <section class="cs-section reveal relief relief-arcs">
+          <h2><span class="idx">02</span> <span data-lang="es">mi contribución</span><span data-lang="en" hidden>my contribution</span></h2>
+          <p class="cs-lede" style="margin-bottom:20px" data-lang="es">Como desarrollador backend del equipo de la OFICIC (~230 commits, cuarto contribuidor del núcleo del proyecto, activo desde febrero 2023), mi aporte más significativo fue <strong>diseñar la arquitectura de generación de reportes Excel</strong>, además de construir y liderar varios módulos completos.</p>
+          <p class="cs-lede" style="margin-bottom:20px" data-lang="en" hidden>As a backend developer on the OFICIC team (~230 commits, fourth core contributor, active since Feb 2023), my most significant contribution was <strong>designing the Excel report-generation architecture</strong>, plus building and leading several complete modules.</p>
+
+          <div class="cs-callout">
+            <div class="cs-callout-head"><svg class="ico" width="17" height="17"><use href="#ic-file"/></svg> <span data-lang="es">Logro principal — arquitectura de reportes Excel (Apache POI)</span><span data-lang="en" hidden>Lead achievement — Excel reporting architecture (Apache POI)</span></div>
+            <p data-lang="es">Diseñé los cimientos de la generación de reportes Excel del sistema. Introduje un <em>style factory</em> —<code>createStyles(Workbook)</code>— que devuelve un <code>Map&lt;String, CellStyle&gt;</code> de estilos nombrados, precacheados y reutilizables, apoyado en un helper <code>createBorderedStyle</code>. La decisión técnica clave: precachear y reutilizar instancias de <code>CellStyle</code> a través del map en lugar de crear un estilo por celda. Esto evita el error clásico de Apache POI —el límite duro de ~64.000 estilos por libro— que rompe cualquier reporte de tamaño real. Cada reporte parte de un <code>XSSFWorkbook</code> con su print setup (orientación horizontal, ajuste a página), anchos de columna definidos, y se entrega como un <code>ByteArrayOutputStream</code> descargable.</p>
+            <p data-lang="en" hidden>I designed the foundations of the system's Excel report generation. I introduced a <em>style factory</em> —<code>createStyles(Workbook)</code>— that returns a <code>Map&lt;String, CellStyle&gt;</code> of named, precached, reusable styles, backed by a <code>createBorderedStyle</code> helper. The key technical decision: precache and reuse <code>CellStyle</code> instances through the map instead of creating one style per cell. This avoids the classic Apache POI pitfall —the hard limit of ~64,000 styles per workbook— that breaks any real-sized report. Each report starts from an <code>XSSFWorkbook</code> with its print setup (landscape, fit-to-page), defined column widths, and is delivered as a downloadable <code>ByteArrayOutputStream</code>.</p>
+            <p class="cs-callout-impact" data-lang="es"><strong>Impacto:</strong> ese patrón es hoy el estándar del equipo para Excel y se reutiliza en <strong>13 módulos de servicio</strong> desarrollados por distintas personas. Para ser preciso: la reportería es transversal y todo el equipo construyó reportes; mi contribución fue diseñar la arquitectura que los demás adoptaron, no escribir todos los reportes.</p>
+            <p class="cs-callout-impact" data-lang="en" hidden><strong>Impact:</strong> that pattern is now the team's standard for Excel and is reused across <strong>13 service modules</strong> built by different people. To be precise: reporting is cross-cutting and the whole team built reports; my contribution was designing the architecture others adopted, not writing every report.</p>
+          </div>
+
+          <dl class="cs-dl" style="margin-top:20px">
+            <div class="it">
+              <dt><svg class="ico" width="15" height="15" style="vertical-align:-2px"><use href="#ic-server"/></svg> <span data-lang="es">Módulos que construí o lideré (autor principal)</span><span data-lang="en" hidden>Modules I built or led (lead author)</span></dt>
+              <dd data-lang="es"><strong>Recursos Internos</strong> — autor único, de cero (Controller → Service → Repository, auth JWT, control de accesos por permisos, export a Excel). <strong>Dashboards</strong> — autor principal de endpoints y consultas de Alumnos y Docentes (incl. condición laboral docente). <strong>Cierre de Carga</strong> y <strong>Trazabilidad / Auditoría</strong> — autor principal.</dd>
+              <dd data-lang="en" hidden><strong>Internal Resources</strong> — sole author, from scratch (Controller → Service → Repository, JWT auth, permission-based access control, Excel export). <strong>Dashboards</strong> — lead author of Student and Faculty endpoints and queries (incl. faculty employment status). <strong>Course Closing</strong> and <strong>Audit Trail</strong> — lead author.</dd>
+            </div>
+            <div class="it">
+              <dt><svg class="ico" width="15" height="15" style="vertical-align:-2px"><use href="#ic-layers"/></svg> <span data-lang="es">Como co-autor</span><span data-lang="en" hidden>As co-author</span></dt>
+              <dd data-lang="es">Carga Lectiva (grupos y cupos PEB, consulta de carga, periodos activos), Gestión de Alumnos (deserción, retención, admisión), Mantenimiento (exoneración de cursos) y Gestión de Notas (PDF de cursos sin nota).</dd>
+              <dd data-lang="en" hidden>Teaching Load (PEB groups and quotas, load lookup, active periods), Student Management (dropout, retention, admission), Maintenance (course exemptions) and Grade Management (PDFs for courses without grades).</dd>
+            </div>
+            <div class="it">
+              <dt><svg class="ico" width="15" height="15" style="vertical-align:-2px"><use href="#ic-chart"/></svg> <span data-lang="es">Frontend</span><span data-lang="en" hidden>Frontend</span></dt>
+              <dd data-lang="es">También participé en el frontend, concretamente en los módulos de Medicina dentro de Carga Lectiva.</dd>
+              <dd data-lang="en" hidden>I also worked on the frontend, specifically the Medicine modules within Teaching Load.</dd>
+            </div>
+            <div class="it">
+              <dt><svg class="ico" width="15" height="15" style="vertical-align:-2px"><use href="#ic-wrench"/></svg> <span data-lang="es">Incidencias de producción resueltas</span><span data-lang="en" hidden>Production issues resolved</span></dt>
+              <dd data-lang="es">Detección de cruces de horarios por alumno (evitando matrículas con conflictos); reportes PDF que salían en blanco cuando había cursos sin nota; y apellido materno duplicado en los reportes de asistencia a exámenes.</dd>
+              <dd data-lang="en" hidden>Per-student schedule-clash detection (preventing conflicting enrollments); blank PDF reports when courses had no registered grade; and a duplicated maternal surname in exam-attendance reports.</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="cs-section reveal relief relief-arcs">
+          <h2><span class="idx">03</span> <span data-lang="es">arquitectura &amp; stack</span><span data-lang="en" hidden>architecture &amp; stack</span></h2>
+          <p class="cs-lede" data-lang="es">Backend monolítico en Java 17 sobre Spring Boot 2.5.2 (Web/MVC, Data JPA + JDBC, Security), empaquetado como WAR sobre Tomcat externo. Persistencia heterogénea reflejo de la convivencia con el legacy: SQL Server 2019 (bases <code>BDURP</code> y <code>URPBD</code>) como almacén principal y MySQL para el datasource de recursos —hasta cuatro datasources por entorno—. La generación documental se apoya en Apache POI (Excel) y Thymeleaf (PDF/HTML). El backend y los frontends viven en repositorios separados.</p>
+          <p class="cs-lede" data-lang="en" hidden>Monolithic backend in Java 17 on Spring Boot 2.5.2 (Web/MVC, Data JPA + JDBC, Security), packaged as a WAR on an external Tomcat. Heterogeneous persistence reflecting the legacy coexistence: SQL Server 2019 (<code>BDURP</code> and <code>URPBD</code> databases) as the main store and MySQL for the resources datasource —up to four datasources per environment—. Document generation relies on Apache POI (Excel) and Thymeleaf (PDF/HTML). Backend and frontends live in separate repositories.</p>
+          <dl class="cs-dl" style="margin-top:20px">
+            <div class="it">
+              <dt><span data-lang="es">Lenguaje &amp; framework</span><span data-lang="en" hidden>Language &amp; framework</span></dt>
+              <dd>Java 17 · Spring Boot 2.5.2 (Web/MVC, Data JPA + JDBC, Security) · WAR / Tomcat</dd>
+            </div>
+            <div class="it">
+              <dt><span data-lang="es">Datos</span><span data-lang="en" hidden>Data</span></dt>
+              <dd>SQL Server 2019 (BDURP, URPBD) + MySQL · <span data-lang="es">hasta 4 datasources por entorno</span><span data-lang="en" hidden>up to 4 datasources per environment</span></dd>
+            </div>
+            <div class="it">
+              <dt><span data-lang="es">Reportes &amp; integraciones</span><span data-lang="en" hidden>Reporting &amp; integrations</span></dt>
+              <dd>Apache POI 5.2 · Thymeleaf · AWS S3 · <code>javax.mail</code> · WebFlux (push FCM) · JWT (jjwt + Auth0)</dd>
+            </div>
+            <div class="it">
+              <dt><span data-lang="es">Observabilidad &amp; proceso</span><span data-lang="en" hidden>Observability &amp; process</span></dt>
+              <dd>Actuator + Micrometer + Prometheus · Azure DevOps (PRs, work items, pipeline con Gitleaks) · <span data-lang="es">1.775 commits · ~270 archivos Java</span><span data-lang="en" hidden>1,775 commits · ~270 Java files</span></dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="cs-section reveal relief relief-arcs">
+          <h2><span class="idx">04</span> <span data-lang="es">impacto &amp; prensa</span><span data-lang="en" hidden>impact &amp; press</span></h2>
+          <p class="cs-lede" data-lang="es">YachayHuasi está en producción atendiendo a unos 11.600 alumnos por ciclo y reemplazó a Apolo, el sistema que la URP usó durante más de 20 años. Al lanzarse en el semestre 2023-II operaba ya al 95% de su capacidad, y su presentación tuvo cobertura de prensa en El Comercio (agosto de 2023). Sobre esa base de más de 30 módulos y ~660 endpoints, mi huella concreta es la arquitectura de reportes Excel que hoy se reutiliza en 13 módulos del equipo, además de cuatro módulos de los que fui autor principal.</p>
+          <p class="cs-lede" data-lang="en" hidden>YachayHuasi is in production serving around 11,600 students per cycle and replaced Apolo, the system URP used for over 20 years. At its 2023-II launch it was already operating at 95% of its capacity, and its presentation was covered by El Comercio (August 2023). On top of that base of 30+ modules and ~660 endpoints, my concrete footprint is the Excel reporting architecture now reused across 13 team modules, plus four modules I led as lead author.</p>
+          <p class="cs-note">
+            <span data-lang="es">Proyecto institucional desarrollado en equipo (~6 desarrolladores) por la OFICIC de la URP. Las cifras de escala (alumnos, módulos, endpoints, prensa) describen el sistema completo; las atribuciones de “autor principal”, “co-autor” y “arquitectura de reportes” describen mi contribución específica, verificada contra el historial del repositorio.</span>
+            <span data-lang="en" hidden>Institutional project built by a team (~6 developers) at URP's OFICIC. The scale figures (students, modules, endpoints, press) describe the whole system; the “lead author”, “co-author” and “reporting architecture” attributions describe my specific contribution, verified against the repository history.</span>
+          </p>
+          <div class="cs-cta">
+            <a class="btn btn--ghost" href="https://suplementos.elcomercio.pe/propuesta-urp-154/2023/08/25/yachayhuasi-la-nueva-plataforma-educativa/" target="_blank" rel="noopener">
+              <svg class="ico" width="18" height="18"><use href="#ic-external"/></svg> El Comercio
+            </a>
+            <a class="btn btn--ghost" href="https://www.urp.edu.pe/oficinas/oficina-central-de-informatica-y-computo/" target="_blank" rel="noopener">
+              <svg class="ico" width="18" height="18"><use href="#ic-external"/></svg> OFICIC · URP
+            </a>
+            <a class="btn btn--primary" href="../index.html#projects">
+              <svg class="ico" width="18" height="18"><use href="#ic-back"/></svg>
+              <span data-i18n="cs.viewSite">Ver portafolio</span>
+            </a>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container inner">
+      <span class="muted">© <span data-year>2026</span> Carlos Machicado</span>
+      <span class="muted">YachayHuasi · Universidad Ricardo Palma</span>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script src="../assets/js/i18n.js" defer></script>
+  <script src="../assets/js/main.js" defer></script>
+</body>
+</html>

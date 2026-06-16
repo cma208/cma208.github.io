@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXUS CORE — Case study · Carlos Machicado</title>
+  <meta name="description" content="NEXUS CORE: agente conversacional RAG 100% on-premise (Java 21, Spring Boot 4, pgvector, vLLM/Ollama). Architecture brief por Carlos Machicado." />
+  <meta name="theme-color" content="#3a6b54" />
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <script>
+    (function () {
+      var d = document.documentElement; d.classList.add("js");
+      try {
+        var t = localStorage.getItem("cm_theme");
+        if (t !== "light" && t !== "dark") t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        d.setAttribute("data-theme", t);
+      } catch (e) { d.setAttribute("data-theme", "light"); }
+    })();
+  </script>
+</head>
+<body>
+  <svg class="icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="ic-back" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+    <symbol id="ic-github" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></symbol>
+    <symbol id="ic-external" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+    <symbol id="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+    <symbol id="ic-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></symbol>
+    <symbol id="ic-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></symbol>
+    <symbol id="ic-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></symbol>
+    <symbol id="ic-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+    <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="ic-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></symbol>
+    <symbol id="ic-bot" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><path d="M8 16h.01M16 16h.01"/></symbol>
+  </svg>
+
+  <header class="header" data-header>
+    <div class="container nav">
+      <a class="cs-back" href="../index.html">
+        <svg class="ico"><use href="#ic-back"/></svg>
+        <span data-i18n="cs.back">Volver al inicio</span>
+      </a>
+      <div class="nav-tools">
+        <div class="lang-toggle" role="group" aria-label="Idioma / Language">
+          <button type="button" data-lang-btn="es">ES</button>
+          <button type="button" data-lang-btn="en">EN</button>
+        </div>
+        <button type="button" class="icon-btn" data-theme-toggle aria-label="Theme">
+          <svg class="ico theme-icon-sun" width="19" height="19"><use href="#ic-sun"/></svg>
+          <svg class="ico theme-icon-moon" width="19" height="19"><use href="#ic-moon"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="cs-hero relief relief-dots">
+      <div class="container">
+        <p class="eyebrow" style="margin-bottom:10px">NEXUS CORE</p>
+        <h1 class="reveal">NEXUS CORE</h1>
+        <p class="cs-sub reveal">
+          <span data-lang="es">Agente conversacional RAG 100% on-premise — Architecture brief.</span>
+          <span data-lang="en" hidden>100% on-premise conversational RAG agent — Architecture brief.</span>
+        </p>
+        <p class="cs-role reveal" data-i18n="cs.nexus.role">Universidad Ricardo Palma · 2025–2026 · Construido individualmente end-to-end</p>
+        <div class="cs-stats">
+          <div class="chip reveal"><div class="n"><span data-count="100" data-suffix="%">100%</span></div><div class="l"><span data-lang="es">on-premise</span><span data-lang="en" hidden>on-premise</span></div></div>
+          <div class="chip reveal"><div class="n"><span data-count="30">30</span></div><div class="l"><span data-lang="es">sesiones concurrentes</span><span data-lang="en" hidden>concurrent sessions</span></div></div>
+          <div class="chip reveal"><div class="n"><span data-count="7" data-suffix="s">7s</span></div><div class="l"><span data-lang="es">latencia p50</span><span data-lang="en" hidden>p50 latency</span></div></div>
+          <div class="chip reveal"><div class="n">~<span data-count="239">239</span></div><div class="l"><span data-lang="es">clases Java (+54 de prueba)</span><span data-lang="en" hidden>Java classes (+54 test)</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="cs-body">
+      <div class="container">
+
+        <section class="cs-section reveal relief relief-dots">
+          <h2><span class="idx">01</span> <span data-lang="es">contexto</span><span data-lang="en" hidden>context</span></h2>
+          <p class="cs-lede" data-lang="es">Asistente de IA conversacional para una universidad peruana que responde consultas de docentes y alumnos sobre normativa y documentación interna mediante RAG, ejecutado íntegramente on-premise (sin enviar datos a APIs comerciales) por requisitos de privacidad y cumplimiento. Construido end-to-end de forma individual: arquitectura, investigación, desarrollo y evaluación.</p>
+          <p class="cs-lede" data-lang="en" hidden>Conversational AI assistant for a Peruvian university that answers faculty and student questions about internal policies and documentation via RAG, running entirely on-premise (no data sent to commercial APIs) for privacy and compliance reasons. Built end-to-end single-handedly: architecture, research, development and evaluation.</p>
+        </section>
+
+        <section class="cs-section reveal relief relief-dots">
+          <h2><span class="idx">02</span> <span data-lang="es">arquitectura &amp; stack</span><span data-lang="en" hidden>architecture &amp; stack</span></h2>
+          <dl class="cs-dl">
+            <div class="it">
+              <dt><svg class="ico" width="15" height="15" style="vertical-align:-2px"><use href="#ic-layers"/></svg> Backend</dt>
+              <dd data-lang="es">Java 21, Spring Boot 4 (WebFlux reactivo + R2DBC), Spring AI, Spring Security 7 / OAuth2. ~239 clases + 54 de prueba (<code>Testcontainers</code>, <code>WireMock</code>, <code>k6</code>).</dd>
+              <dd data-lang="en" hidden>Java 21, Spring Boot 4 (reactive WebFlux + R2DBC), Spring AI, Spring Security 7 / OAuth2. ~239 classes + 54 test classes (<code>Testcontainers</code>, <code>WireMock</code>, <code>k6</code>).</dd>
+            </div>
+            <div class="it">
+              <dt><svg class="ico" width="15" height="15" style="vertical-align:-2px"><use href="#ic-database"/></svg> <span data-lang="es">Datos</span><span data-lang="en" hidden>Data</span></dt>
+              <dd data-lang="es">PostgreSQL 16 + <code>pgvector</code> como única base relacional y vectorial (índice HNSW). Migraciones con Flyway.</dd>
+              <dd data-lang="en" hidden>PostgreSQL 16 + <code>pgvector</code> as the single relational and vector store (HNSW index). Flyway migrations.</dd>
+            </div>
+            <div class="it">
+              <dt><svg class="ico" width="15" height="15" style="vertical-align:-2px"><use href="#ic-cpu"/></svg> <span data-lang="es">Despliegue</span><span data-lang="en" hidden>Deployment</span></dt>
+              <dd data-lang="es">Docker Compose con overlays (GPU / Mac / dev / observabilidad). Portable sin cambios de código entre servidor NVIDIA y Apple Silicon.</dd>
+              <dd data-lang="en" hidden>Docker Compose with overlays (GPU / Mac / dev / observability). Portable with no code changes between an NVIDIA server and Apple Silicon.</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="cs-section reveal relief relief-dots">
+          <h2><span class="idx">03</span> <span data-lang="es">pipeline rag</span><span data-lang="en" hidden>rag pipeline</span></h2>
+          <div class="flow" aria-hidden="true">
+            <div class="flow-step"><div class="fs-t"><svg class="ico"><use href="#ic-database"/></svg> <span data-lang="es">Ingesta</span><span data-lang="en" hidden>Ingestion</span></div><div class="fs-d">bge-m3 · 1024-dim</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-t"><svg class="ico"><use href="#ic-layers"/></svg> <span data-lang="es">Híbrida</span><span data-lang="en" hidden>Hybrid</span></div><div class="fs-d">vector + BM25 · RRF</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-t"><svg class="ico"><use href="#ic-chart"/></svg> Reranking</div><div class="fs-d">bge-reranker-v2-m3</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="fs-t"><svg class="ico"><use href="#ic-bot"/></svg> <span data-lang="es">Generación</span><span data-lang="en" hidden>Generation</span></div><div class="fs-d">[N] citations · guardrails</div></div>
+          </div>
+          <dl class="cs-dl" style="margin-top:20px">
+            <div class="it">
+              <dt><span data-lang="es">Ingesta</span><span data-lang="en" hidden>Ingestion</span></dt>
+              <dd data-lang="es">Chunking inteligente (~2000 caracteres, overlap 200) por párrafo/puntuación. Embeddings <code>BAAI/bge-m3</code> (1024 dim) vía TEI.</dd>
+              <dd data-lang="en" hidden>Smart chunking (~2000 chars, 200 overlap) at paragraph/punctuation boundaries. <code>BAAI/bge-m3</code> embeddings (1024-dim) via TEI.</dd>
+            </div>
+            <div class="it">
+              <dt><span data-lang="es">Recuperación híbrida</span><span data-lang="en" hidden>Hybrid retrieval</span></dt>
+              <dd data-lang="es">Vector (coseno) + BM25 full-text en español, fusionados con Reciprocal Rank Fusion (<code>k=60</code>). Filtrado por rol/scope antes del retrieval (autorización fuera del LLM).</dd>
+              <dd data-lang="en" hidden>Vector (cosine) + Spanish BM25 full-text, fused with Reciprocal Rank Fusion (<code>k=60</code>). Role/scope filtering before retrieval (authorization outside the LLM).</dd>
+            </div>
+            <div class="it">
+              <dt>Reranking</dt>
+              <dd data-lang="es"><code>BAAI/bge-reranker-v2-m3</code> (top-20 → 10 → 6 chunks, umbral 0.3 con fallback).</dd>
+              <dd data-lang="en" hidden><code>BAAI/bge-reranker-v2-m3</code> (top-20 → 10 → 6 chunks, threshold 0.3 with fallback).</dd>
+            </div>
+            <div class="it">
+              <dt><span data-lang="es">Generación</span><span data-lang="en" hidden>Generation</span></dt>
+              <dd data-lang="es">Citación inline obligatoria <code>[N]</code> y guardrails anti-alucinación/anti-jailbreak en capas (regex + semántico + filtro de fuga). Tool-calling: ~7 herramientas en registro dinámico desde BD, filtradas por rol; flujos normal / crisis / continuación.</dd>
+              <dd data-lang="en" hidden>Mandatory inline citations <code>[N]</code> and layered anti-hallucination/anti-jailbreak guardrails (regex + semantic + output-leak filter). Tool-calling: ~7 tools in a DB-driven dynamic registry, role-filtered; normal / crisis / continuation flows.</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="cs-section reveal relief relief-dots">
+          <h2><span class="idx">04</span> <span data-lang="es">inferencia local &amp; rendimiento</span><span data-lang="en" hidden>local inference &amp; performance</span></h2>
+          <dl class="cs-dl">
+            <div class="it">
+              <dt>LLM</dt>
+              <dd data-lang="es"><code>Qwen3-4B-Instruct</code> cuantizado AWQ INT4, servido con vLLM en NVIDIA A5000 24 GB (alternativa: Gemma vía Ollama en Apple Silicon). API OpenAI-compatible.</dd>
+              <dd data-lang="en" hidden><code>Qwen3-4B-Instruct</code> quantized to AWQ INT4, served with vLLM on an NVIDIA A5000 24 GB (alternative: Gemma via Ollama on Apple Silicon). OpenAI-compatible API.</dd>
+            </div>
+            <div class="it">
+              <dt><span data-lang="es">Rendimiento (medido)</span><span data-lang="en" hidden>Performance (measured)</span></dt>
+              <dd data-lang="es">30 sesiones concurrentes de flujo completo a p50 7.0 s (36/36 sin fallos). Barrido empírico de <code>gpu-memory-utilization</code> → 0.78, logrando 12.4× de concurrencia KV (~101.6k tokens).</dd>
+              <dd data-lang="en" hidden>30 full-flow concurrent sessions at p50 7.0 s (36/36, no failures). Empirical <code>gpu-memory-utilization</code> sweep → 0.78, reaching 12.4× KV concurrency (~101.6k tokens).</dd>
+            </div>
+            <div class="it">
+              <dt><span data-lang="es">Evaluación</span><span data-lang="en" hidden>Evaluation</span></dt>
+              <dd data-lang="es">Golden set de ~43 consultas (admisión, académico, fuera-de-scope, jailbreak multi-idioma, crisis, redteam) con criterios contains/not-contains + latencia.</dd>
+              <dd data-lang="en" hidden>Golden set of ~43 queries (admissions, academic, out-of-scope, multilingual jailbreak, crisis, redteam) with contains/not-contains criteria + latency.</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="cs-section reveal relief relief-dots">
+          <h2><span class="idx">05</span> <span data-lang="es">seguridad &amp; cumplimiento</span><span data-lang="en" hidden>security &amp; compliance</span></h2>
+          <dl class="cs-dl">
+            <div class="it">
+              <dt><svg class="ico" width="15" height="15" style="vertical-align:-2px"><use href="#ic-shield"/></svg> <span data-lang="es">Autorización</span><span data-lang="en" hidden>Authorization</span></dt>
+              <dd data-lang="es">Multi-rol (JWT multi-issuer; 4 roles con scopes, rate-limits y token-caps). Filtrado por rol previo al retrieval.</dd>
+              <dd data-lang="en" hidden>Multi-role (multi-issuer JWT; 4 roles with scopes, rate-limits and token caps). Role filtering before retrieval.</dd>
+            </div>
+            <div class="it">
+              <dt><span data-lang="es">Auditoría &amp; privacidad</span><span data-lang="en" hidden>Audit &amp; privacy</span></dt>
+              <dd data-lang="es">Auditoría inviolable append-only con cadena de hashes <code>SHA-256</code>; redacción de PII.</dd>
+              <dd data-lang="en" hidden>Tamper-evident append-only audit with a <code>SHA-256</code> hash chain; PII redaction.</dd>
+            </div>
+            <div class="it">
+              <dt>Compliance</dt>
+              <dd data-lang="es">Ley N° 29733 (Perú), compatible GDPR / LGPD / CCPA; gestión de derechos del titular (DSR), consentimiento y retención.</dd>
+              <dd data-lang="en" hidden>Peru's Law No. 29733, compatible with GDPR / LGPD / CCPA; data-subject rights (DSR), consent and retention management.</dd>
+            </div>
+            <div class="it">
+              <dt><span data-lang="es">Observabilidad</span><span data-lang="en" hidden>Observability</span></dt>
+              <dd data-lang="es">OpenTelemetry + Prometheus + Grafana + Loki + Tempo; kill-switches por subsistema.</dd>
+              <dd data-lang="en" hidden>OpenTelemetry + Prometheus + Grafana + Loki + Tempo; per-subsystem kill-switches.</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="cs-section reveal relief relief-dots">
+          <h2><span class="idx">06</span> <span data-lang="es">estado &amp; próximos pasos</span><span data-lang="en" hidden>status &amp; next steps</span></h2>
+          <dl class="cs-dl">
+            <div class="it">
+              <dt><span data-lang="es">Estado</span><span data-lang="en" hidden>Status</span></dt>
+              <dd data-lang="es">Arquitectura completa y validada en pruebas de carga; en fase pre-piloto, iniciando pruebas con usuarios.</dd>
+              <dd data-lang="en" hidden>Architecture complete and validated under load testing; in pre-pilot, entering user testing.</dd>
+            </div>
+            <div class="it">
+              <dt><span data-lang="es">Próximos pasos</span><span data-lang="en" hidden>Next steps</span></dt>
+              <dd data-lang="es">Carga del corpus institucional, métricas automatizadas de recuperación (recall@k, faithfulness) y CI/CD.</dd>
+              <dd data-lang="en" hidden>Institutional corpus loading, automated retrieval metrics (recall@k, faithfulness) and CI/CD.</dd>
+            </div>
+          </dl>
+          <p class="cs-note">
+            <span data-lang="es">El código es privado (proyecto institucional); este brief resume la arquitectura y los resultados.</span>
+            <span data-lang="en" hidden>The source code is private (institutional project); this brief summarizes the architecture and results.</span>
+          </p>
+          <div class="cs-cta">
+            <a class="btn btn--primary" href="../index.html#projects">
+              <svg class="ico" width="18" height="18"><use href="#ic-back"/></svg>
+              <span data-i18n="cs.viewSite">Ver portafolio</span>
+            </a>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container inner">
+      <span class="muted">© <span data-year>2026</span> Carlos Machicado</span>
+      <span class="muted">NEXUS CORE · Architecture brief</span>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script src="../assets/js/i18n.js" defer></script>
+  <script src="../assets/js/main.js" defer></script>
+</body>
+</html>
